@@ -7,7 +7,10 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "imgui.h"
+#include "imgui-SFML.h"
 #include "tinyfiledialogs.h"
+#include <SFML/Graphics/RenderWindow.hpp>
 
 struct Vertex {
     float x, y, z;
@@ -16,12 +19,13 @@ struct Vertex {
 struct Triangle {
     Vertex vertices[3];
 };
+
 void drawGrid(float size, float step) {
     glBegin(GL_LINES);
-    glColor3f(0.5, 0.5, 0.5); // Kolor siatki
+    glColor3f(0.5f, 0.5f, 0.5f); // Kolor siatki
     for (float i = -size; i <= size; i += step) {
-        glVertex3f(i, 0, -size); glVertex3f(i, 0, size); // Linie poziome
-        glVertex3f(-size, 0, i); glVertex3f(size, 0, i); // Linie pionowe
+        glVertex3f(i, 0.0f, -size); glVertex3f(i, 0.0f, size); // Linie poziome
+        glVertex3f(-size, 0.0f, i); glVertex3f(size, 0.0f, i); // Linie pionowe
     }
     glEnd();
 }
@@ -29,19 +33,19 @@ void drawGrid(float size, float step) {
 void drawAxes(float length) {
     glBegin(GL_LINES);
     // Oœ X - Czerwona
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(length, 0.0, 0.0);
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(length, 0.0f, 0.0f);
 
     // Oœ Y - Zielona
-    glColor3f(0.0, 1.0, 0.0);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(0.0, length, 0.0);
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, length, 0.0f);
 
     // Oœ Z - Niebieska
-    glColor3f(0.0, 0.0, 1.0);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(0.0, 0.0, length);
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, length);
     glEnd();
 }
 
@@ -54,7 +58,6 @@ void drawModel(const std::vector<Triangle>& triangles) {
     }
     glEnd();
 }
-
 
 std::vector<Triangle> loadModel(const std::string& filename) {
     std::vector<Triangle> triangles;
@@ -83,83 +86,130 @@ std::vector<Triangle> loadModel(const std::string& filename) {
     return triangles;
 }
 
-// Funkcje drawAxes, drawGrid i drawModel pozostaj¹ bez zmian
-
-int main() {
-    const char* filterPatterns[5] = { "*.obj", "*.stl", "*.ply", "*.fbx", "*.3ds" };
-    const char* filename = tinyfd_openFileDialog("Wybierz model 3D", "", 5, filterPatterns, NULL, 0);
-
-    if (!filename) {
-        std::cerr << "Nie wybrano pliku" << std::endl;
-        return 1;
-    }
-
-    std::vector<Triangle> triangles = loadModel(filename);
-
-    sf::Window window(sf::VideoMode(800, 600), "Model Viewer 3D", sf::Style::Default, sf::ContextSettings(24));
+void initWindow(sf::RenderWindow& window) {
+    window.create(sf::VideoMode(1920, 1080), "3D Model Viewer", sf::Style::Default, sf::ContextSettings(24));
     window.setVerticalSyncEnabled(true);
+    ImGui::SFML::Init(window);
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45.0f, static_cast<float>(window.getSize().x) / window.getSize().y, 1.0f, 500.0f);
+    // Opcjonalne: £adowanie w³asnej czcionki (jeœli nie chcesz u¿ywaæ domyœlnej)
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->AddFontDefault();
+    // Jeœli masz w³asn¹ czcionkê, za³aduj j¹ tutaj
+    // io.Fonts->AddFontFromFileTTF("path_to_your_font.ttf", 16.0f);
+    ImGui::SFML::UpdateFontTexture(); // Aktualizuje teksturê czcionki
+}
 
-    float cameraX = 0.0f, cameraY = 5.0f, cameraZ = 5.0f;
-    float angleX = 0.0f, angleY = 0.0f;
-    const float rotationSpeed = 0.5f;
+void handleEvents(sf::RenderWindow& window, bool& running, float& cameraX, float& cameraY, float& cameraZ, float& cameraAngleX, float& cameraAngleY) {
+    sf::Event event;
+    while (window.pollEvent(event)) {
+        ImGui::SFML::ProcessEvent(event);
 
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            }
+        if (event.type == sf::Event::Closed) {
+            running = false;
+        }
 
-            if (event.type == sf::Event::KeyPressed) {
-                switch (event.key.code) {
-                case sf::Keyboard::W:
-                    cameraZ -= 0.1f;
-                    break;
-                case sf::Keyboard::S:
-                    cameraZ += 0.1f;
-                    break;
-                case sf::Keyboard::A:
-                    cameraX -= 0.1f;
-                    break;
-                case sf::Keyboard::D:
-                    cameraX += 0.1f;
-                    break;
-                case sf::Keyboard::Q:
-                    angleY -= rotationSpeed;
-                    break;
-                case sf::Keyboard::E:
-                    angleY += rotationSpeed;
-                    break;
-                case sf::Keyboard::Up:
-                    angleX += rotationSpeed;
-                    break;
-                case sf::Keyboard::Down:
-                    angleX -= rotationSpeed;
-                    break;
-                }
+        if (event.type == sf::Event::KeyPressed) {
+            switch (event.key.code) {
+            case sf::Keyboard::W:
+                cameraZ -= 0.1f;
+                break;
+            case sf::Keyboard::S:
+                cameraZ += 0.1f;
+                break;
+            case sf::Keyboard::A:
+                cameraX -= 0.1f;
+                break;
+            case sf::Keyboard::D:
+                cameraX += 0.1f;
+                break;
+            case sf::Keyboard::Q:
+                cameraAngleY -= 0.5f;
+                break;
+            case sf::Keyboard::E:
+                cameraAngleY += 0.5f;
+                break;
+            case sf::Keyboard::Up:
+                cameraAngleX += 0.5f;
+                break;
+            case sf::Keyboard::Down:
+                cameraAngleX -= 0.5f;
+                break;
             }
         }
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glTranslatef(-cameraX, -cameraY, -cameraZ);
-        glRotatef(angleX, 1.0f, 0.0f, 0.0f);
-        glRotatef(angleY, 0.0f, 1.0f, 0.0f);
-
-        drawGrid(20.0f, 1.0f);
-        drawAxes(20.0f);
-        drawModel(triangles);
-
-        window.display();
+        if (event.type == sf::Event::Resized) {
+            glViewport(0, 0, event.size.width, event.size.height);
+        }
     }
-
-    return 0;
 }
 
+void drawScene(sf::RenderWindow& window, const std::vector<std::vector<Triangle>>& models, float cameraX, float cameraY, float cameraZ, float cameraAngleX, float cameraAngleY) {
+    window.clear();
+    window.pushGLStates();
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0f, static_cast<float>(window.getSize().x) / window.getSize().y, 0.1f, 100.0f);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(-cameraX, -cameraY, -cameraZ);
+    glRotatef(cameraAngleX, 1.0f, 0.0f, 0.0f);
+    glRotatef(cameraAngleY, 0.0f, 1.0f, 0.0f);
+
+    for (const auto& model : models) {
+        drawModel(model);
+    }
+
+    window.popGLStates();
+    ImGui::SFML::Render(window);
+    window.display();
+}
+
+void handleMenu(std::vector<std::vector<Triangle>>& models) {
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Load Model")) {
+                const char* filterPatterns[5] = { "*.obj", "*.stl", "*.ply", "*.fbx", "*.3ds" };
+                const char* filename = tinyfd_openFileDialog("Load a 3D Model", "", 5, filterPatterns, NULL, 0);
+                if (filename) {
+                    models.push_back(loadModel(filename));
+                }
+            }
+
+            if (ImGui::MenuItem("Add Another Model")) {
+                const char* filterPatterns[5] = { "*.obj", "*.stl", "*.ply", "*.fbx", "*.3ds" };
+                const char* filename = tinyfd_openFileDialog("Add another 3D Model", "", 5, filterPatterns, NULL, 0);
+                if (filename) {
+                    models.push_back(loadModel(filename));
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+}
+
+int main() {
+    sf::RenderWindow window;
+    initWindow(window);
+
+    std::vector<std::vector<Triangle>> models;
+    bool running = true;
+
+    float cameraX = 0.0f, cameraY = 0.0f, cameraZ = 5.0f;
+    float cameraAngleX = 0.0f, cameraAngleY = 0.0f;
+
+    // Zegar do aktualizacji ImGui
+    sf::Clock deltaClock;
+
+    while (running) {
+        handleEvents(window, running, cameraX, cameraY, cameraZ, cameraAngleX, cameraAngleY);
+        ImGui::SFML::Update(window, deltaClock.restart());
+        handleMenu(models);
+        drawScene(window, models, cameraX, cameraY, cameraZ, cameraAngleX, cameraAngleY);
+    }
+
+    ImGui::SFML::Shutdown();
+    return 0;
+}
