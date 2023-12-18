@@ -147,15 +147,23 @@ void drawScene(sf::RenderWindow& window, const std::vector<std::vector<Triangle>
     window.clear();
     window.pushGLStates();
 
+    // Ustawienie perspektywy
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0f, static_cast<float>(window.getSize().x) / window.getSize().y, 0.1f, 100.0f);
+    gluPerspective(45.0f, static_cast<float>(window.getSize().x) / window.getSize().y, 0.1f, 1000.0f);
+
+    // Ustawienie widoku kamery
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(-cameraX, -cameraY, -cameraZ);
     glRotatef(cameraAngleX, 1.0f, 0.0f, 0.0f);
     glRotatef(cameraAngleY, 0.0f, 1.0f, 0.0f);
 
+    // Rysowanie siatki i osi (powinny byæ rysowane pierwsze)
+    drawGrid(100.0f, 1.0f); // Zmieniono rozmiar siatki, aby by³a widoczna
+    drawAxes(100.0f); // Zmieniono d³ugoœæ osi, aby by³y widoczne
+
+    // Rysowanie wszystkich modeli
     for (const auto& model : models) {
         drawModel(model);
     }
@@ -164,6 +172,7 @@ void drawScene(sf::RenderWindow& window, const std::vector<std::vector<Triangle>
     ImGui::SFML::Render(window);
     window.display();
 }
+
 
 void handleMenu(std::vector<std::vector<Triangle>>& models) {
     if (ImGui::BeginMainMenuBar()) {
