@@ -20,6 +20,11 @@ struct Triangle {
     Vertex vertices[3];
 };
 
+struct Model {
+    std::vector<Triangle> triangles;
+    // Mo¿esz dodaæ wiêcej informacji o modelu, np. po³o¿enie, obrót itp.
+};
+
 void drawGrid(float size, float step) {
     glBegin(GL_LINES);
     glColor3f(0.5f, 0.5f, 0.5f); // Kolor siatki
@@ -59,32 +64,35 @@ void drawModel(const std::vector<Triangle>& triangles) {
     glEnd();
 }
 
-std::vector<Triangle> loadModel(const std::string& filename) {
-    std::vector<Triangle> triangles;
+std::vector<Model> loadModel(const std::string& filename) {
+    std::vector<Model> loadedModels;
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         std::cerr << "Assimp error: " << importer.GetErrorString() << std::endl;
-        return triangles;
+        return loadedModels;
     }
 
     for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[i];
+        std::vector<Triangle> triangles;
         for (unsigned int j = 0; j < mesh->mNumFaces; j++) {
             aiFace face = mesh->mFaces[j];
             Triangle triangle;
             for (unsigned int k = 0; k < 3; k++) {
                 aiVector3D vertex = mesh->mVertices[face.mIndices[k]];
-                triangle.vertices[k].x = vertex.x * 0.1f; // Skalowanie
-                triangle.vertices[k].y = vertex.y * 0.1f;
-                triangle.vertices[k].z = vertex.z * 0.1f;
+                triangle.vertices[k].x = vertex.x;
+                triangle.vertices[k].y = vertex.y;
+                triangle.vertices[k].z = vertex.z;
             }
             triangles.push_back(triangle);
         }
+        loadedModels.push_back({ triangles });
     }
-    return triangles;
+    return loadedModels;
 }
+
 
 void initWindow(sf::RenderWindow& window) {
     window.create(sf::VideoMode(1920, 1080), "3D Model Viewer", sf::Style::Default, sf::ContextSettings(24));
@@ -143,7 +151,7 @@ void handleEvents(sf::RenderWindow& window, bool& running, float& cameraX, float
     }
 }
 
-void drawScene(sf::RenderWindow& window, const std::vector<std::vector<Triangle>>& models, float cameraX, float cameraY, float cameraZ, float cameraAngleX, float cameraAngleY) {
+void drawScene(sf::RenderWindow& window, const std::vector<Model>& models, float cameraX, float cameraY, float cameraZ, float cameraAngleX, float cameraAngleY) {
     window.clear();
     window.pushGLStates();
 
@@ -160,12 +168,12 @@ void drawScene(sf::RenderWindow& window, const std::vector<std::vector<Triangle>
     glRotatef(cameraAngleY, 0.0f, 1.0f, 0.0f);
 
     // Rysowanie siatki i osi (powinny byæ rysowane pierwsze)
-    drawGrid(100.0f, 1.0f); // Zmieniono rozmiar siatki, aby by³a widoczna
-    drawAxes(100.0f); // Zmieniono d³ugoœæ osi, aby by³y widoczne
+    drawGrid(100.0f, 1.0f);
+    drawAxes(100.0f);
 
     // Rysowanie wszystkich modeli
     for (const auto& model : models) {
-        drawModel(model);
+        drawModel(model.triangles); // Teraz przekazujemy 'triangles' z ka¿dego 'Model'
     }
 
     window.popGLStates();
@@ -174,48 +182,41 @@ void drawScene(sf::RenderWindow& window, const std::vector<std::vector<Triangle>
 }
 
 
-void handleMenu(std::vector<std::vector<Triangle>>& models) {
+
+void handleMenu(sf::RenderWindow& window, std::vector<Model>& models) {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Load Model")) {
                 const char* filterPatterns[5] = { "*.obj", "*.stl", "*.ply", "*.fbx", "*.3ds" };
                 const char* filename = tinyfd_openFileDialog("Load a 3D Model", "", 5, filterPatterns, NULL, 0);
                 if (filename) {
-                    models.push_back(loadModel(filename));
+                    std::vector<Model> newModels = loadModel(filename);
+                    models.insert(models.end(), newModels.begin(), newModels.end());
                 }
             }
-
-            if (ImGui::MenuItem("Add Another Model")) {
-                const char* filterPatterns[5] = { "*.obj", "*.stl", "*.ply", "*.fbx", "*.3ds" };
-                const char* filename = tinyfd_openFileDialog("Add another 3D Model", "", 5, filterPatterns, NULL, 0);
-                if (filename) {
-                    models.push_back(loadModel(filename));
-                }
-            }
-
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
 }
 
+
 int main() {
     sf::RenderWindow window;
     initWindow(window);
 
-    std::vector<std::vector<Triangle>> models;
+    std::vector<Model> models;
     bool running = true;
 
     float cameraX = 0.0f, cameraY = 0.0f, cameraZ = 5.0f;
     float cameraAngleX = 0.0f, cameraAngleY = 0.0f;
 
-    // Zegar do aktualizacji ImGui
     sf::Clock deltaClock;
 
     while (running) {
         handleEvents(window, running, cameraX, cameraY, cameraZ, cameraAngleX, cameraAngleY);
         ImGui::SFML::Update(window, deltaClock.restart());
-        handleMenu(models);
+        handleMenu(window, models);
         drawScene(window, models, cameraX, cameraY, cameraZ, cameraAngleX, cameraAngleY);
     }
 
