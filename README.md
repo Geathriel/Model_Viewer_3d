@@ -1,4 +1,3 @@
-Wstęp
 Ta dokumentacja opisuje proces instalacji i uruchomienia aplikacji 3D Model Viewer. Aplikacja jest kompatybilna z systemam Windows
 
 Wymagane Komponenty
