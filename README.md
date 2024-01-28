@@ -9,8 +9,6 @@ Assimp (wersja 5.0.1 lub nowsza)
 ImGui i ImGui-SFML
 GLM (OpenGL Mathematics)
 
-Komponenty znajdują się w folderach lib (bibloteki) i include (pliki nagłówkowe).
-
 Kompilacja
 Otwórz terminal lub wiersz poleceń w folderze projektu.
 Utwórz folder build: mkdir build && cd build
