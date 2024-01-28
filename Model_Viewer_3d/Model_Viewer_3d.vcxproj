@@ -71,20 +71,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\tomas\Desktop\vcpkg\vcpkg\installed\x64-windows\include;C:\SFML-2.6.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\tomas\Desktop\vcpkg\vcpkg\installed\x64-windows\lib;C:\SFML-2.6.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\tomas\source\repos\Model_Viewer_3d\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\tomas\source\repos\Model_Viewer_3d\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Users\tomas\Desktop\vcpkg\vcpkg\installed\x64-windows\include;C:\SFML-2.6.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\tomas\Desktop\vcpkg\vcpkg\installed\x64-windows\lib;C:\SFML-2.6.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\tomas\source\repos\Model_Viewer_3d\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\tomas\source\repos\Model_Viewer_3d\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\tomas\Desktop\vcpkg\vcpkg\installed\x64-windows\include;C:\SFML-2.6.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\tomas\Desktop\vcpkg\vcpkg\installed\x64-windows\lib;C:\SFML-2.6.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\tomas\source\repos\Model_Viewer_3d\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\tomas\source\repos\Model_Viewer_3d\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\tomas\Desktop\vcpkg\vcpkg\installed\x64-windows\include;C:\SFML-2.6.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\tomas\Desktop\vcpkg\vcpkg\installed\x64-windows\lib;C:\SFML-2.6.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\tomas\source\repos\Model_Viewer_3d\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\tomas\source\repos\Model_Viewer_3d\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
